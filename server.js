@@ -40,7 +40,6 @@ app.post('/gateway-mount', (req, res) => {
     if (!target.startsWith('http://') && !target.startsWith('https://')) {
         target = 'https://' + target;
     }
-    // Set global app property to store the current destination URL
     app.set('currentTarget', target);
     res.redirect('/viewport/');
 });
@@ -62,4 +61,4 @@ app.use('/viewport', (req, res, next) => {
     })(req, res, next);
 });
 
-app.listen(PORT, () => console.log(\`Gateway routing active on port \${PORT}\`));
+app.listen(PORT, () => console.log('Gateway routing active on port ' + PORT));
