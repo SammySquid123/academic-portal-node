@@ -6,152 +6,173 @@ const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-function filterHeaders(proxyRes) {
-    delete proxyRes.headers['x-frame-options'];
-    delete proxyRes.headers['content-security-policy'];
-    delete proxyRes.headers['content-security-policy-report-only'];
+const css = `* { box-sizing: border-box; margin: 0; padding: 0; } 
+body { font-family: sans-serif; background: #07070c; color: #ffb700; height: 100vh; display: flex; flex-direction: column; overflow: hidden; } 
+header { background: #0f0f1a; border-bottom: 2px solid #ffb700; padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; } 
+.branding { font-weight: 900; cursor: pointer; text-shadow: 0 0 8px #ffb700; } 
+.tab-strip { display: flex; gap: 6px; overflow-x: auto; flex-grow: 1; padding-bottom: 2px; } 
+.tab { background: #141424; padding: 6px 12px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; display: flex; align-items: center; border: 1px solid #2a2a40; color: #8a8a9e; } 
+.tab.active { background: #ffb700; color: #07070c; font-weight: 700; border-color: #ffb700; } 
+.close-btn { margin-left: 6px; font-weight: bold; cursor: pointer; } 
+.add-tab-btn { background: #141424; border: 1px solid #ffb700; color: #ffb700; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-weight: bold; } 
+.nav-controls { display: flex; gap: 4px; align-items: center; } 
+.nav-btn { background: #141424; border: 1px solid #ffb700; color: #ffb700; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; } 
+.nav-btn:hover { background: #ffb700; color: #07070c; } 
+.address-bar { background: #07070c; border: 1px solid #ffb700; border-radius: 4px; padding: 6px; color: #fff; width: 160px; font-size: 13px; } 
+.viewport-container { flex-grow: 1; position: relative; background: #000; } 
+.view-frame { width: 100%; height: 100%; border: none; background: white; display: none; } 
+.view-frame.active { display: block; } 
+.home-dashboard { position: absolute; width: 100%; height: 100%; background: #0b0b14; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; } 
+.search-box { background: #0f0f1a; padding: 25px; border-radius: 8px; border: 1px solid #ffb700; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); } 
+.search-box h1 { margin-bottom: 10px; font-size: 24px; text-shadow: 0 0 10px rgba(255,183,0,0.3); } 
+.search-box input { width: 100%; padding: 12px; background: #07070c; border: 1px solid #ffb700; border-radius: 6px; color: #fff; margin-bottom: 12px; text-align: center; outline: none; } 
+.search-box button { width: 100%; padding: 12px; background: #ffb700; color: #07070c; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }`;
+
+const uiScript = `let tabs = []; let activeId = null;
+function createTab() { 
+    const id = 't_' + Date.now(); 
+    tabs.push({ id: id, title: 'Blank Tab', url: null, isHome: true, history: [], historyIndex: -1 }); 
+    const container = document.getElementById('viewCont'); 
+    const dash = document.createElement('div'); 
+    dash.className = 'home-dashboard'; 
+    dash.id = 'h_' + id; 
+    dash.innerHTML = '<div class="search-box"><h1>DogePortal V4</h1><input type="text" id="i_' + id + '" placeholder="Search DuckDuckGo or enter URL"><button onclick="mount(\\'' + id + '\\')">Launch Core</button></div>'; 
+    const frame = document.createElement('iframe'); 
+    frame.className = 'view-frame'; 
+    frame.id = 'f_' + id; 
+    container.appendChild(dash); 
+    container.appendChild(frame); 
+    dash.querySelector('input').addEventListener('keypress', (e) => { if(e.key==='Enter') mount(id); }); 
+    switchTab(id); 
 }
+function renderTabs() { 
+    const strip = document.getElementById('strip'); 
+    strip.innerHTML = ''; 
+    tabs.forEach(t => { 
+        const el = document.createElement('div'); 
+        el.className = 'tab ' + (t.id === activeId ? 'active' : ''); 
+        el.onclick = () => switchTab(t.id); 
+        el.innerHTML = '<span>' + t.title + '</span><span class="close-btn" onclick="event.stopPropagation(); closeTab(\\'' + t.id + '\\')">×</span>'; 
+        strip.appendChild(el); 
+    }); 
+}
+function switchTab(id) { 
+    activeId = id; 
+    const t = tabs.find(x => x.id === id); 
+    document.querySelectorAll('.home-dashboard, .view-frame').forEach(el => { el.style.display = 'none'; el.classList.remove('active'); }); 
+    const h = document.getElementById('h_' + id); 
+    const f = document.getElementById('f_' + id); 
+    const b = document.getElementById('tBar'); 
+    if (t.isHome) { if(h) h.style.display = 'flex'; b.value = ''; } 
+    else { if(f) { f.style.display = 'block'; f.classList.add('active'); } b.value = t.url; } 
+    renderTabs(); 
+}
+function closeTab(id) { 
+    if (tabs.length <= 1) return; 
+    const idx = tabs.findIndex(x => x.id === id); 
+    tabs = tabs.filter(x => x.id !== id); 
+    document.getElementById('h_' + id)?.remove(); 
+    document.getElementById('f_' + id)?.remove(); 
+    if (activeId === id) activeId = tabs[idx > 0 ? idx - 1 : 0].id; 
+    switchTab(activeId); 
+}
+function navigateBack() {
+    const t = tabs.find(x => x.id === activeId);
+    if (!t || t.isHome || t.historyIndex <= 0) return;
+    t.historyIndex--;
+    t.url = t.history[t.historyIndex];
+    document.getElementById('f_' + activeId).src = '/session-route/' + encodeURIComponent(t.url);
+    document.getElementById('tBar').value = t.url;
+}
+function navigateForward() {
+    const t = tabs.find(x => x.id === activeId);
+    if (!t || t.isHome || t.historyIndex >= t.history.length - 1) return;
+    t.historyIndex++;
+    t.url = t.history[t.historyIndex];
+    document.getElementById('f_' + activeId).src = '/session-route/' + encodeURIComponent(t.url);
+    document.getElementById('tBar').value = t.url;
+}
+function refreshTab() {
+    const t = tabs.find(x => x.id === activeId);
+    if (!t || t.isHome || !t.url) return;
+    document.getElementById('f_' + activeId).src = '/session-route/' + encodeURIComponent(t.url);
+}
+function mount(id, forcedUrl = null) { 
+    const input = document.getElementById('i_' + id); 
+    let query = forcedUrl || input.value.trim(); 
+    if(!query) return; 
+    let url = query; 
+    const urlRegEx = /^(https?:\\/\\/)?(www\\.)?([a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)+)(\\/.*)?$/; 
+    if (!forcedUrl && (!urlRegEx.test(url) || url.includes(' '))) { 
+        url = 'https://duckduckgo.com' + encodeURIComponent(query); 
+    } else if (!url.startsWith('http://') && !url.startsWith('https://')) { 
+        url = 'https://' + url; 
+    } 
+    const t = tabs.find(x => x.id === id); 
+    t.url = url; 
+    t.isHome = false; 
+    
+    if (t.historyIndex === -1 || t.history[t.historyIndex] !== url) {
+        t.history = t.history.slice(0, t.historyIndex + 1);
+        t.history.push(url);
+        t.historyIndex++;
+    }
 
-// 1. Deliver the visual browser template framework directly inline
+    try { 
+        t.title = new URL(url).hostname.replace('www.', ''); 
+        if(t.title.includes('duckduckgo')) t.title = 'DDG Search'; 
+    } catch(e) { t.title = 'Resource'; } 
+    document.getElementById('h_' + id).style.display = 'none'; 
+    document.getElementById('f_' + id).src = '/session-route/' + encodeURIComponent(url); 
+    switchTab(id); 
+}
+function goHome() { 
+    if (!activeId) return; 
+    const t = tabs.find(x => x.id === activeId); 
+    t.isHome = true; t.title = 'Blank Tab'; t.url = null; 
+    document.getElementById('f_' + activeId).src = 'about:blank'; 
+    switchTab(activeId); 
+}
+function launchTop() { 
+    if (!activeId) return; 
+    const b = document.getElementById('tBar'); 
+    if (b.value.trim()) mount(activeId, b.value.trim()); 
+}
+window.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'URL_CHANGE') {
+        const t = tabs.find(x => x.id === activeId);
+        if (t && t.url !== e.data.url) {
+            t.url = e.data.url;
+            document.getElementById('tBar').value = t.url;
+            if (t.history[t.historyIndex] !== t.url) {
+                t.history = t.history.slice(0, t.historyIndex + 1);
+                t.history.push(t.url);
+                t.historyIndex++;
+            }
+        }
+    }
+});
+createTab();`;
+
 app.get('/', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-            <title>DogePortal V4</title>
-            <style>
-                * { box-sizing: border-box; margin: 0; padding: 0; }
-                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #07070c; color: #ffb700; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-                header { background: #0f0f1a; border-bottom: 2px solid #ffb700; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; gap: 15px; box-shadow: 0 0 15px rgba(255, 183, 0, 0.2); z-index: 20; }
-                .branding { font-weight: 900; font-size: 18px; color: #ffb700; text-shadow: 0 0 8px rgba(255,183,0,0.5); cursor: pointer; }
-                .tab-strip { display: flex; gap: 6px; overflow-x: auto; flex-grow: 1; }
-                .tab { background: #141424; border: 1px solid #2a2a40; padding: 6px 14px; border-radius: 6px 6px 0 0; font-size: 13px; cursor: pointer; color: #8a8a9e; display: flex; align-items: center; gap: 8px; }
-                .tab.active { background: #ffb700; color: #07070c; font-weight: 700; }
-                .tab .close-btn { font-weight: bold; cursor: pointer; margin-left: 4px; }
-                .add-tab-btn { background: #141424; border: 1px solid #ffb700; color: #ffb700; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
-                .nav-controls { display: flex; gap: 6px; align-items: center; }
-                .nav-btn { background: #141424; border: 1px solid #ffb700; color: #ffb700; width: 34px; height: 34px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-                .address-bar { background: #07070c; border: 1px solid #ffb700; border-radius: 6px; padding: 8px 12px; color: #fff; font-size: 14px; outline: none; width: 160px; }
-                .viewport-container { flex-grow: 1; position: relative; background: #07070c; }
-                .view-frame { width: 100%; height: 100%; border: none; background: white; display: none; }
-                .view-frame.active { display: block; }
-                .home-dashboard { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0b0b14; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 10; }
-                .search-box { width: 100%; max-width: 500px; background: #0f0f1a; padding: 30px; border-radius: 12px; border: 1px solid #ffb700; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-                .search-box h1 { font-size: 28px; margin-bottom: 5px; color: #ffb700; }
-                .search-box p { font-size: 13px; color: #7a7a9e; margin-bottom: 20px; }
-                .search-box input { width: 100%; padding: 14px; background: #07070c; border: 1px solid #ffb700; border-radius: 8px; color: #fff; font-size: 16px; outline: none; margin-bottom: 15px; text-align: center; }
-                .search-box button { width: 100%; padding: 14px; background: #ffb700; color: #07070c; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-            </style>
-        </head>
-        <body>
-            <header>
-                <div class="branding" onclick="goHome()">🐕 DogePortal</div>
-                <div class="tab-strip" id="tabStrip"></div>
-                <button class="add-tab-btn" onclick="createNewTab()">+</button>
-                <div class="nav-controls">
-                    <button class="nav-btn" onclick="goHome()">🏠</button>
-                    <input type="text" class="address-bar" id="topAddressBar" placeholder="Enter URL..." onkeypress="if(event.key==='Enter')launchUrlFromTop()">
-                    <button class="nav-btn" onclick="launchUrlFromTop()">➜</button>
-                </div>
-            </header>
-            <div class="viewport-container" id="viewportContainer"></div>
-            <script>
-                let tabs = [];
-                let activeTabId = null;
+    res.send(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>DogePortal</title><style>${css}</style></head><body><header><div class="branding" onclick="goHome()">🐕 DogePortal</div><div class="nav-controls"><button class="nav-btn" onclick="navigateBack()">◀</button><button class="nav-btn" onclick="navigateForward()">▶</button><button class="nav-btn" onclick="refreshTab()">↻</button><button class="nav-btn" onclick="goHome()">🏠</button></div><div class="tab-strip" id="strip"></div><button class="add-tab-btn" onclick="createTab()">+</button><div class="nav-controls"><input type="text" class="address-bar" id="tBar" placeholder="Search or URL..."><button class="nav-btn" onclick="launchTop()">➜</button></div></header><div class="viewport-container" id="viewCont"></div><script>${uiScript}</script></body></html>`);
+});
 
-                function createNewTab() {
-                    const id = 'tab_' + Date.now();
-                    tabs.push({ id: id, title: 'Blank Tab', url: null, isHome: true });
-                    const container = document.getElementById('viewportContainer');
-                    const dashboard = document.createElement('div');
-                    dashboard.className = 'home-dashboard';
-                    dashboard.id = 'home_' + id;
-                    dashboard.innerHTML = \`
-                        <div class="search-box">
-                            <h1>DogePortal V4</h1>
-                            <p>Decentralized Virtual Gateway Matrix</p>
-                            <input type="text" id="input_\${id}" placeholder="https://google.com" onkeypress="if(event.key==='Enter')mountTab('\${id}')">
-                            <button onclick="mountTab('\${id}')">Deploy Connection</button>
-                        </div>
-                    \`;
-                    const iframe = document.createElement('iframe');
-                    iframe.className = 'view-frame';
-                    iframe.id = 'frame_' + id;
-                    container.appendChild(dashboard);
-                    container.appendChild(iframe);
-                    renderTabs();
-                    switchTab(id);
-                }
+// Injection script that monitors links and redirects inside the running iframe sandbox
+const clientInjectionScript = `
+<script>
+(function() {
+    // Force target="_blank" links to open inside our current view instead of breaking out
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link) {
+            if (link.target === '_blank') link.removeAttribute('target');
+            const href = link.getAttribute('href');
+            if (href && !href.startsWith('javascript:') && !href.startsWith('#')) {
+                // Inform top shell window of the active navigation jump
+                window.parent.postMessage({ type: 'URL_CHANGE', url: link.href }, '*');
+            }
+        }
+    }, true);
 
-                function renderTabs() {
-                    const strip = document.getElementById('tabStrip');
-                    strip.innerHTML = '';
-                    tabs.forEach(t => {
-                        const el = document.createElement('div');
-                        el.className = 'tab ' + (t.id === activeTabId ? 'active' : '');
-                        el.onclick = () => switchTab(t.id);
-                        el.innerHTML = '<span>' + t.title + '</span><span class="close-btn" onclick="event.stopPropagation(); closeTab(\\'' + t.id + '\\')">×</span>';
-                        strip.appendChild(el);
-                    });
-                }
-
-                function switchTab(id) {
-                    activeTabId = id;
-                    const tab = tabs.find(t => t.id === id);
-                    document.querySelectorAll('.home-dashboard, .view-frame').forEach(el => {
-                        el.style.display = 'none';
-                        el.classList.remove('active');
-                    });
-                    const targetHome = document.getElementById('home_' + id);
-                    const targetFrame = document.getElementById('frame_' + id);
-                    const topBar = document.getElementById('topAddressBar');
-                    if (tab.isHome) {
-                        if(targetHome) targetHome.style.display = 'flex';
-                        topBar.value = '';
-                    } else {
-                        if(targetHome) targetHome.style.display = 'none';
-                        if(targetFrame) { targetFrame.style.display = 'block'; targetFrame.classList.add('active'); }
-                        topBar.value = tab.url;
-                    }
-                    renderTabs();
-                }
-
-                function closeTab(id) {
-                    if (tabs.length <= 1) return;
-                    const index = tabs.findIndex(t => t.id === id);
-                    tabs = tabs.filter(t => t.id !== id);
-                    document.getElementById('home_' + id)?.remove();
-                    document.getElementById('frame_' + id)?.remove();
-                    if (activeTabId === id) activeTabId = tabs[index > 0 ? index - 1 : 0].id;
-                    switchTab(activeTabId);
-                }
-
-                function mountTab(id) {
-                    const inputEl = document.getElementById('input_' + id);
-                    let target = inputEl.value.trim();
-                    if(!target) return;
-                    if (!target.startsWith('http://') && !target.startsWith('https://')) target = 'https://' + target;
-                    const tab = tabs.find(t => t.id === id);
-                    tab.url = target;
-                    tab.isHome = false;
-                    try { tab.title = new URL(target).hostname.replace('www.', ''); } catch(e) { tab.title = 'Resource'; }
-                    document.getElementById('home_' + id).style.display = 'none';
-                    document.getElementById('frame_' + id).src = '/session-route/' + encodeURIComponent(target);
-                    switchTab(id);
-                }
-
-                function goHome() {
-                    if (!activeTabId) return;
-                    const tab = tabs.find(t => t.id === activeTabId);
-                    tab.isHome = true;
-                    tab.title = 'Blank Tab';
-                    tab.url = null;
-                    document.getElementById('frame_' + activeTabId).src = 'about:blank';
-                    switchTab(activeTabId);
-                }
-
-                function launchUrlFromTop() {
-                    if (!activeTabId) return;
-                    const topBar = document.getElementById('topAddressBar');
-                    const mockInput = document.getElementById('input_' + activeTabId);
+    // Overwrite default window opens
