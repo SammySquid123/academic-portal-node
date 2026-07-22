@@ -16,13 +16,11 @@ app.get('/', (req, res) => {
             <title>EduPortal Workspace</title>
             <style>
                 * { box-sizing: border-box; margin: 0; padding: 0; }
-                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0a12; color: #e2e2ec; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0a0a12; color: #e2e2ec; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
                 
-                /* Neon Accent Doge-Inspired Header */
                 header { background: #111122; border-bottom: 2px solid #ff0055; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; gap: 15px; box-shadow: 0 0 15px rgba(255, 0, 85, 0.2); }
                 .branding { font-weight: 800; font-size: 18px; color: #ff0055; text-shadow: 0 0 8px rgba(255, 0, 85, 0.6); display: flex; align-items: center; gap: 8px; cursor: pointer; }
                 
-                /* Custom Tab Management Strip */
                 .tab-strip { display: flex; gap: 6px; overflow-x: auto; flex-grow: 1; padding-bottom: 2px; max-width: 60%; }
                 .tab { background: #1a1a2e; border: 1px solid #333; padding: 6px 16px; border-radius: 6px 6px 0 0; font-size: 13px; cursor: pointer; color: #8a8a9e; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: all 0.2s; }
                 .tab.active { background: #ff0055; color: white; border-color: #ff0055; font-weight: 600; box-shadow: 0 -2px 10px rgba(255,0,85,0.3); }
@@ -31,19 +29,16 @@ app.get('/', (req, res) => {
                 .add-tab-btn { background: #1a1a2e; border: 1px solid #444; color: #ff0055; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
                 .add-tab-btn:hover { background: #ff0055; color: white; }
 
-                /* Navigation Bar controls */
                 .nav-controls { display: flex; gap: 8px; align-items: center; }
                 .nav-btn { background: #1b1b3a; border: 1px solid #ff0055; color: #ff0055; width: 34px; height: 34px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
                 .nav-btn:hover { background: #ff0055; color: white; }
                 .address-bar { flex-grow: 1; background: #07070f; border: 1px solid #334; border-radius: 6px; padding: 8px 12px; color: #fff; font-size: 14px; outline: none; max-width: 400px; }
                 .address-bar:focus { border-color: #00ffcc; box-shadow: 0 0 8px rgba(0, 255, 204, 0.4); }
 
-                /* Core Layout Window Frame container */
                 .viewport-container { flex-grow: 1; position: relative; background: #07070f; }
                 .view-frame { width: 100%; height: 100%; border: none; background: white; display: none; }
                 .view-frame.active { display: block; }
 
-                /* Built-In Home Screen Dashboard Overlay */
                 .home-dashboard { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0d0d1f; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 10; text-align: center; }
                 .home-dashboard.hidden { display: none; }
                 .search-box { width: 100%; max-width: 550px; background: #161630; padding: 30px; border-radius: 12px; border: 1px solid #ff0055; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
@@ -80,7 +75,6 @@ app.get('/', (req, res) => {
                     const tabObj = { id: id, title: 'New Tab', url: null, isHome: true };
                     tabs.push(tabObj);
 
-                    // Append the actual frame container element
                     const container = document.getElementById('viewportContainer');
                     
                     const dashboard = document.createElement('div');
@@ -125,8 +119,10 @@ app.get('/', (req, res) => {
                     activeTabId = id;
                     const tab = tabs.find(t => t.id === id);
                     
-                    document.querySelectorAll('.home-dashboard, .view-frame').forEach(el => el.classList.remove('active'));
-                    document.querySelectorAll('.view-frame').forEach(el => el.style.display = 'none');
+                    document.querySelectorAll('.home-dashboard, .view-frame').forEach(el => {
+                        el.classList.remove('active');
+                        el.style.display = 'none';
+                    });
 
                     const targetHome = document.getElementById('home_' + id);
                     const targetFrame = document.getElementById('frame_' + id);
@@ -166,3 +162,11 @@ app.get('/', (req, res) => {
                 function mountTab(id) {
                     const inputEl = document.getElementById('input_' + id);
                     let target = inputEl.value.trim();
+                    if(!target) return;
+
+                    if (!target.startsWith('http://') && !target.startsWith('https://')) {
+                        target = 'https://' + target;
+                    }
+
+                    const tab = tabs.find(t => t.id === id);
+                    tab.url = target;
