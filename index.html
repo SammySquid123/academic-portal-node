@@ -56,9 +56,14 @@
             dash.className = 'home-dashboard';
             dash.id = 'h_' + id;
             dash.innerHTML = `<div class="search-box"><h1>DogePortal V4</h1><input type="text" id="i_${id}" placeholder="Search DuckDuckGo or enter URL"><button onclick="mount('${id}')">Launch Core</button></div>`;
+            
             const frame = document.createElement('iframe');
             frame.className = 'view-frame';
             frame.id = 'f_' + id;
+            
+            // Fixed sandbox permissions to handle frame navigation scripts smoothly
+            frame.setAttribute('sandbox', 'allow-forms allow-modals allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts');
+            
             container.appendChild(dash);
             container.appendChild(frame);
             dash.querySelector('input').addEventListener('keypress', (e) => { if(e.key==='Enter') mount(id); });
@@ -104,7 +109,7 @@
             if (!t || t.isHome || t.historyIndex <= 0) return;
             t.historyIndex--;
             t.url = t.history[t.historyIndex];
-            document.getElementById('f_' + activeId).src = 'https://corsproxy.io?' + encodeURIComponent(t.url);
+            document.getElementById('f_' + activeId).src = t.url;
             document.getElementById('tBar').value = t.url;
         }
 
@@ -113,14 +118,14 @@
             if (!t || t.isHome || t.historyIndex >= t.history.length - 1) return;
             t.historyIndex++;
             t.url = t.history[t.historyIndex];
-            document.getElementById('f_' + activeId).src = 'https://corsproxy.io?' + encodeURIComponent(t.url);
+            document.getElementById('f_' + activeId).src = t.url;
             document.getElementById('tBar').value = t.url;
         }
 
         function refreshTab() {
             const t = tabs.find(x => x.id === activeId);
             if (!t || t.isHome || !t.url) return;
-            document.getElementById('f_' + activeId).src = 'https://corsproxy.io?' + encodeURIComponent(t.url);
+            document.getElementById('f_' + activeId).src = t.url;
         }
 
         function mount(id, forcedUrl = null) {
@@ -129,6 +134,7 @@
             if(!query) return;
             let url = query;
             const urlRegEx = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+)(\/.*)?$/;
+            
             if (!forcedUrl && (!urlRegEx.test(url) || url.includes(' '))) {
                 url = 'https://duckduckgo.com' + encodeURIComponent(query);
             } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -145,7 +151,9 @@
                 if(t.title.includes('duckduckgo')) t.title = 'DDG Search';
             } catch(e) { t.title = 'Resource'; }
             document.getElementById('h_' + id).style.display = 'none';
-            document.getElementById('f_' + id).src = 'https://corsproxy.io?' + encodeURIComponent(url);
+            
+            // Complete bypass of CorsProxy.io to directly anchor the iframe target window link
+            document.getElementById('f_' + id).src = url;
             switchTab(id);
         }
 
