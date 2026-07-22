@@ -1,0 +1,35 @@
+name: Deploy Stealth Workspace
+on:
+  push:
+    branches: [ main ]
+jobs:
+  obfuscate-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install JavaScript Obfuscator
+        run: npm install -g javascript-obfuscator
+
+      - name: Scramble UI Code Logic
+        run: |
+          # Isolate the script block from index.html, scramble it, and rebuild the template securely
+          sed -n '/<script>/,/<\/script>/p' index.html | sed '1d;$d' > raw.js
+          javascript-obfuscator raw.js --output stealth.js --compact true --control-flow-flattening true --string-array true
+          sed -i '/<script>/,/<\/script>/{/<script>/!{/<\/script>/!d}}' index.html
+          sed -i '/<script>/r stealth.js' index.html
+
+      - name: Upload Clean Build Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Push Live to GitHub Pages
+        uses: actions/deploy-pages@v4
+        id: deployment
