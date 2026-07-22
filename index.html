@@ -3,42 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DogePortal V4 - Core</title>
+    <title>DogePortal V4 - Core Engine</title>
     <style>
-        /* Matrix Core & Doge V4 Neon Theme Alignment */
+        /* Core Reset & Cyberpunk Neon Dogev4 Color Architecture */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #06060c; color: #ffb700; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #05050a; color: #ffb700; height: 100vh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
         
-        /* Tactical Navigation System Layout */
-        header { background: #0c0c16; border-bottom: 2px solid #ffb700; padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; z-index: 99; }
-        .branding { font-weight: 900; font-size: 18px; color: #ffb700; text-shadow: 0 0 8px #ffb700; cursor: pointer; white-space: nowrap; }
+        /* Unified System Navigation Array Frame */
+        header { background: #0a0a14; border-bottom: 2px solid #ffb700; padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 4px 20px rgba(255, 183, 0, 0.15); z-index: 999; }
+        .branding { font-weight: 900; font-size: 19px; color: #ffb700; text-shadow: 0 0 10px rgba(255, 183, 0, 0.6); cursor: pointer; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; }
         
-        /* Multi-Tab Terminal Strip Styles */
-        .tab-strip { display: flex; gap: 4px; overflow-x: auto; flex-grow: 1; margin: 0 8px; }
+        /* Multi-Tab Command Console Strips */
+        .tab-strip { display: flex; gap: 4px; overflow-x: auto; flex-grow: 1; margin: 0 10px; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
         .tab-strip::-webkit-scrollbar { display: none; }
-        .tab { background: #121222; border: 1px solid #23233a; padding: 6px 14px; border-radius: 6px 6px 0 0; font-size: 13px; cursor: pointer; color: #8e8eaf; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-        .tab.active { background: #ffb700; color: #06060c; border-color: #ffb700; font-weight: 700; }
-        .tab .close-btn { font-weight: bold; cursor: pointer; font-size: 11px; }
-        .add-tab-btn { background: #121222; border: 1px solid #ffb700; color: #ffb700; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-        /* Unified Address Controls */
+        .tab { background: #111122; border: 1px solid #22223b; padding: 6px 14px; border-radius: 6px 6px 0 0; font-size: 13px; cursor: pointer; color: #8585a3; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: all 0.2s ease; position: relative; }
+        .tab:hover { background: #16162e; color: #b3b3cc; }
+        .tab.active { background: #ffb700; color: #05050a; border-color: #ffb700; font-weight: 700; box-shadow: 0 -3px 12px rgba(255, 183, 0, 0.25); }
+        .tab .close-btn { font-weight: bold; cursor: pointer; padding: 1px 5px; border-radius: 4px; font-size: 11px; margin-left: 2px; transition: background 0.2s; }
+        .tab .close-btn:hover { background: rgba(0, 0, 0, 0.2); }
+        
+        /* Global Navigation Command Blocks */
         .nav-controls { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
-        .nav-btn { background: #121222; border: 1px solid #ffb700; color: #ffb700; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
-        .address-bar { background: #030307; border: 1px solid #ffb700; border-radius: 6px; padding: 7px 12px; color: #fff; font-size: 13px; outline: none; width: 140px; }
-        @media(min-width: 500px) { .address-bar { width: 220px; } }
+        .nav-btn { background: #111122; border: 1px solid #ffb700; color: #ffb700; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; transition: all 0.15s ease; }
+        .nav-btn:hover { background: #ffb700; color: #05050a; box-shadow: 0 0 8px rgba(255, 183, 0, 0.4); }
+        .add-tab-btn { background: #111122; border: 1px solid #ffb700; color: #ffb700; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s ease; }
+        .add-tab-btn:hover { background: #ffb700; color: #05050a; }
+        .address-bar { background: #020205; border: 1px solid #ffb700; border-radius: 6px; padding: 7px 12px; color: #fff; font-size: 13px; outline: none; width: 140px; transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .address-bar:focus { border-color: #00ffcc; box-shadow: 0 0 8px rgba(0, 255, 204, 0.35); }
+        @media(min-width: 600px) { .address-bar { width: 280px; } }
 
-        /* Virtual Document Isolation Workspace */
-        .viewport-container { flex-grow: 1; position: relative; background: #020205; height: calc(100vh - 52px); }
+        /* Isolated Frame Node Viewport Containers */
+        .viewport-container { flex-grow: 1; position: relative; background: #010103; height: calc(100vh - 50px); }
         .view-frame { width: 100%; height: 100%; border: none; background: white; display: none; }
         .view-frame.active { display: block; }
 
-        /* Fixed Mobile iPad Flexbox Layout Dashboard */
-        .home-dashboard { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #090912; display: flex !important; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 10; }
-        .search-box { width: 100%; max-width: 440px; background: #0f0f1f; padding: 25px; border-radius: 12px; border: 1px solid #ffb700; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-        .search-box h1 { font-size: 28px; margin-bottom: 6px; color: #ffb700; text-shadow: 0 0 8px #ffb700; }
-        .search-box p { font-size: 12px; color: #6f6f8f; margin-bottom: 20px; font-weight: 600; }
-        .search-box input { width: 100%; padding: 12px; background: #040409; border: 1px solid #ffb700; border-radius: 8px; color: #fff; font-size: 15px; outline: none; margin-bottom: 14px; text-align: center; }
-        .search-box button { width: 100%; padding: 12px; background: #ffb700; color: #06060c; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        /* Integrated Decentralized Dashboard Panel */
+        .home-dashboard { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #070710; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 10; overflow-y: auto; }
+        .search-box { width: 100%; max-width: 460px; background: #0e0e1c; padding: 35px 25px; border-radius: 14px; border: 1px solid #ffb700; text-align: center; box-shadow: 0 12px 36px rgba(0,0,0,0.65); }
+        .search-box h1 { font-size: 34px; margin-bottom: 6px; color: #ffb700; text-shadow: 0 0 12px rgba(255, 183, 0, 0.45); letter-spacing: 0.5px; }
+        .search-box p { font-size: 12px; color: #69698c; margin-bottom: 26px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .search-box input { width: 100%; padding: 14px; background: #030307; border: 1px solid #ffb700; border-radius: 8px; color: #fff; font-size: 15px; outline: none; margin-bottom: 16px; text-align: center; transition: border 0.2s; }
+        .search-box input:focus { border-color: #00ffcc; box-shadow: 0 0 8px rgba(0, 255, 204, 0.2); }
+        .search-box button { width: 100%; padding: 14px; background: #ffb700; color: #05050a; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.15s ease; }
+        .search-box button:hover { background: #e0a100; }
     </style>
 </head>
 <body>
@@ -54,7 +61,7 @@
         <div class="tab-strip" id="strip"></div>
         <button class="add-tab-btn" onclick="createTab()">+</button>
         <div class="nav-controls">
-            <input type="text" class="address-bar" id="tBar" placeholder="Search or Enter URL...">
+            <input type="text" class="address-bar" id="tBar" placeholder="Search or input URL...">
             <button class="nav-btn" onclick="launchTop()">➜</button>
         </div>
     </header>
@@ -65,6 +72,19 @@
         let tabs = [];
         let activeId = null;
 
+        // Stealth Base64 Dynamic Masking Engine
+        const crypt = {
+            enc(str) {
+                if (!str) return '';
+                return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m, p) => String.fromCharCode('0x' + p)));
+            },
+            dec(str) {
+                if (!str) return '';
+                return decodeURIComponent(atob(str).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            }
+        };
+
+        // Multi-Tab Memory Allocation Engine
         function createTab() {
             const id = 't_' + Date.now();
             tabs.push({ id: id, title: 'Blank Core', url: null, isHome: true, history: [], historyIndex: -1 });
@@ -76,15 +96,18 @@
             dash.innerHTML = `
                 <div class="search-box">
                     <h1>DogePortal V4</h1>
-                    <p>Decentralized Navigation Terminal</p>
-                    <input type="text" id="i_${id}" placeholder="Search DuckDuckGo or type link...">
-                    <button onclick="mount('${id}')">Initialize Uplink</button>
+                    <p>Virtual Environment Isolation Matrix</p>
+                    <input type="text" id="i_${id}" placeholder="Search DuckDuckGo or input web address...">
+                    <button onclick="mount('${id}')">Boot Connection Matrix</button>
                 </div>
             `;
             
             const frame = document.createElement('iframe');
             frame.className = 'view-frame';
             frame.id = 'f_' + id;
+            
+            // Fixed strict multi-sandbox properties to avoid blank-out connection dropping
+            frame.setAttribute('sandbox', 'allow-forms allow-modals allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts');
             
             container.appendChild(dash);
             container.appendChild(frame);
@@ -108,18 +131,20 @@
             activeId = id;
             const t = tabs.find(x => x.id === id);
             
-            document.querySelectorAll('.home-dashboard').forEach(el => el.style.setProperty('display', 'none', 'important'));
-            document.querySelectorAll('.view-frame').forEach(el => { el.style.display = 'none'; el.classList.remove('active'); });
+            document.querySelectorAll('.home-dashboard, .view-frame').forEach(el => {
+                el.style.display = 'none';
+                el.classList.remove('active');
+            });
             
             const h = document.getElementById('h_' + id);
             const f = document.getElementById('f_' + id);
             const b = document.getElementById('tBar');
             
             if (t.isHome) {
-                if (h) h.style.setProperty('display', 'flex', 'important');
+                if (h) h.style.display = 'flex';
                 b.value = '';
             } else {
-                if (h) h.style.setProperty('display', 'none', 'important');
+                if (h) h.style.display = 'none';
                 if (f) { f.style.display = 'block'; f.classList.add('active'); }
                 b.value = t.url;
             }
@@ -136,52 +161,3 @@
             switchTab(activeId);
         }
 
-        function navBack() {
-            const t = tabs.find(x => x.id === activeId);
-            if (!t || t.isHome || t.historyIndex <= 0) return;
-            t.historyIndex--; t.url = t.history[t.historyIndex];
-            executeProxyLoad(activeId, t.url);
-        }
-
-        function navForward() {
-            const t = tabs.find(x => x.id === activeId);
-            if (!t || t.isHome || t.historyIndex >= t.history.length - 1) return;
-            t.historyIndex++; t.url = t.history[t.historyIndex];
-            executeProxyLoad(activeId, t.url);
-        }
-
-        function refreshTab() {
-            const t = tabs.find(x => x.id === activeId);
-            if (!t || t.isHome || !t.url) return;
-            executeProxyLoad(activeId, t.url);
-        }
-
-        function mount(id, forcedUrl = null) {
-            const input = document.getElementById('i_' + id);
-            let query = forcedUrl || input.value.trim();
-            if (!query) return;
-            
-            let url = query;
-            const urlRegEx = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+)(\/.*)?$/;
-            
-            if (!forcedUrl && (!urlRegEx.test(url) || url.includes(' '))) {
-                url = 'https://duckduckgo.com' + encodeURIComponent(query);
-            } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                url = 'https://' + url;
-            }
-            
-            const t = tabs.find(x => x.id === id);
-            t.url = url; t.isHome = false;
-            
-            if (t.historyIndex === -1 || t.history[t.historyIndex] !== url) {
-                t.history = t.history.slice(0, t.historyIndex + 1);
-                t.history.push(url); t.historyIndex++;
-            }
-
-            try { t.title = new URL(url).hostname.replace('www.', ''); } catch(e) { t.title = 'Uplink'; }
-            switchTab(id);
-            executeProxyLoad(id, url);
-        }
-
-        function executeProxyLoad(id, targetUrl) {
-            const frame = document.getElementById('f_' + id);
